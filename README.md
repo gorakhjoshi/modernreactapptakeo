@@ -1,258 +1,173 @@
 ---
-title: "Upgrade the React App Version"
-description: Before we can do anything else, we must upgrade our sample app's React version to start taking advantage of the advances.
+title: "Lock Down the Node and Yarn Versions"
+description: "Avoid one of the most common developer woes: different devs coding with different environment versions with the help of Volta and Node Engines."
 ---
 
-# Upgrade the React app version
+# Lock down the Node.js and Yarn versions
 
-Hooks weren't introduced until React v16.8.0, but our app is currently running v16.4.0. The first thing we have to do is upgrade the version of React our application is running.
+Our last lesson had us upgrading the React app from React v16.4.1 to React v18.0.0 and resolving any errors that arose as a result of the upgrade.
 
-**This lesson will walk through upgrading our app to use the latest version of React released to date.**
+And that's all well and good, but there's more we could do, in fact, more we _should do_ to ensure that when any other developers join our team and develop a new feature, it doesn't break the app right after deployment because they were developing locally on a different version of Node.js than the app is running in the production environment.
 
-> If you were to attempt to add a hook to our app as it currently exists, you'd see an error in the browser's developer tools along the lines of:
->
-> ```javascript
-> Uncaught TypeError: Object(...) is not a function
-> ```
->
-> It's not a very helpful error message, but after a quick [Google search](https://stackoverflow.com/questions/53861645/react-hooks-issues-in-react-16-7-typeerror-object-is-not-a-function), you'll figure out a React version that doesn't work with hooks is the actual issue.
+So, let's take a couple of steps to prevent such catastrophes from happening. No developer should have to live through that if a little extra upfront work can prevent it.
 
-### Create React app docs
+**In this lesson, we'll learn how to explicitly define our project's environment configurations so that it's harder for devs to do the wrong thing than it is to do the right one.**
 
-Since we have an already existing Create React App, our path to upgrading is a little different than if we were starting from scratch with the most up-to-date version of React. Lucky for us, the [official Create React App docs](https://create-react-app.dev/docs/updating-to-new-releases/) have a fairly well-documented upgrade process.
+### Define the Node engines in the package.json
 
-#### Check the CRA changelog for the latest react-scripts version
+If you're not familiar with [Node engines](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#engines), it's a rarely discussed but very useful code snippet you can include in a project's `package.json` file to let anyone downloading the code know exactly which versions of Node.js, npm, and Yarn are required for the app to run.
 
-**Step one:** Go to the [changelogs for the React Scripts](https://github.com/facebook/create-react-app/blob/master/CHANGELOG.md), and find the newest version of the react-scripts available.
+As the npm docs themselves put it: "[ with engines ] you can specify the version of node that your stuff works on". That's it. Plain and simple.
 
-> At the time of writing this, the React Scripts are up to v5.0.1. They may be higher when you start — best to check the Create React App website.
+> When `"engines"` aren't included (or you use a wildcard `"*"`) in a `package.json`, node assumes any version of it will work.
 
-If you scroll down past the initial notes of what new updates this version contains, you should see a section titled "Migrating from X.X.X to X.X.X".
+So with that in mind, let's define our Node and Yarn versions for our app.
 
-Here are the npm and yarn commands we'll need to upgrade the `react-scripts`, which can then be used to update the React versions in our project.
+Open up our `client/` folder's `package.json` file, and at the very end, right after `"license" : "ISC"`, add the following lines:
 
-Copy the yarn command (or npm, if that's your preference): `yarn add --exact react-scripts@5.0.1`, and paste it into your terminal while inside the `client/` folder of your application.
+```jsx
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "main": "index.js",
+  "devDependencies": {},
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": "^14.0.0",
+    "yarn": "^1.20.0"
+  }
+}
+```
+
+Now, when a developer attempts to install the dependencies and run this app on a Node.js version other than the defined one, an error will be thrown in the console.
+
+Here's an example screenshot where I set the `"engines"` Node version to `"14.0.0"`, but my local development environment is running Node.js version v17.9.0.
+
+![warning in the command line when a different version of Node is used versus what's defined by the package.json's engines](./public/assets/node-engines-warning.png)
+
+See the warning in this error message screenshot? `The engine "node" is incompatible with this module. Expected version "^14.0.0". Got "17.9.0"` That _should_ deter most developers from attempting to go much further with an incompatible Node version.
+
+There is one catch, though. Including `"engines"` alone in the `package.json` doesn't guarantee a developer _must_ use the specified versions as defined.
+
+And if you're a dev lacking the recommended version of Node or npm or what-have-you but you're excited to start developing that shiny new feature, you might be tempted to ignore the warnings provided by `"engines"` in the command line and forge ahead.
+
+For that reason, we're going to make it even easier for any dev to do the right thing, so easy, in fact, you'll wonder how you ever developed without this little addition to your tooling setup: Volta.
+
+### Volta: Taking the hassle out of JavaScript command-line tools
+
+[Volta](https://volta.sh/) is an awesome tool designed to make managing our JavaScript command-line tools, such as `node`, `npm`, `yarn`, or executables shipped as part of JavaScript packages, really easy.
+
+Similar to package managers, Volta keeps track of which project (if any) you’re working on based on your current directory. The tools in your Volta toolchain automatically detect when you’re in a project that’s using a particular version of the tools and takes care of routing to the right version of the tools for you.
+
+It's very cool in practice. Up to now, I'd been using [NVM](https://github.com/nvm-sh/nvm) to manage and switch between different versions of Node.js depending on which project I'm working in, but it was more complicated to set up initially _and_, more importantly, Volta takes the thinking part out of the equation. When it's set up in a project and installed on a local machine, I don't even have to think about switching versions; Volta just does it for me.
+
+#### Download Volta locally
+
+So to get started, let's download Volta locally.
+
+**Volta installation on MacOS/Linux systems**
+
+Open up a new terminal window and run the following command:
 
 ```shell
-yarn add --exact react-scripts@5.0.1
+curl https://get.volta.sh | bash
 ```
 
-#### Upgrade all of your React dependencies manually
+**Volta installation on Windows systems**
 
-I'm not sure if it's just the fact that our version of Create React App is so outdated (it was running `react-scripts: 1.1.4`, after all), or if it is something to do with my computer, in particular, but after upgrading the `react-scripts` dependency, deleting my `node-modules` in the `client/` folder, and re-running `yarn`, the React and React DOM versions in my `package.json` did not upgrade on their own.
+Download and run the [Windows installer](https://github.com/volta-cli/volta/releases/download/v1.0.4/volta-1.0.4-windows-x86_64.msi) and follow the instructions.
 
-Not to worry though, we can do it ourselves.
-
-**Step two:** Manually update your `package.json`'s `"dependencies"` section to the new versions of `react` and `react-dom`, and paste in the unit testing libraries you'll need.
-
-> Normally, in a new CRA project starting from scratch, these testing dependencies are included from the start. So we're including them, too, because they are the best options currently out there for automated testing of React apps.
-
-Here are the additional dependencies we need to add or modify for our `package.json`.
-
-```json
-    "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^13.1.1",
-    "@testing-library/user-event": "^13.5.0",
-```
-
-```json
-    "react": "18.0.0",
-    "react-dom": "18.0.0",
-    "react-router-dom": "^5.2.0",
-    "react-scripts": "5.0.1",
-```
-
-Notice that the `@testing-library` packages are all new, and you can manually update the existing `react` and `react-dom` versions to `^18.0.0`. Then, delete your `node_modules` folder once more from the `client/` folder, and run `yarn` one more time.
-
-> **A way to get all the correct package dependencies to go with the new react-scripts version**
+> **Note for Windows users**
 >
-> Unfortunately, there's no easy way to see what React versions go along with which versions of the `react-scripts`, but I found a workaround, made a little easier by the fact we were upgrading to the latest version of React. It's hacky, but it works.
+> Volta's functionality depends on creating symlinks, so you must either:
 >
-> The solution? Make a sample project using the terminal command to spin up a new starter project.
->
-> ```shell
-> npx install create-react-app sample-app
-> ```
->
-> Once the sample app's finished installing, you can open up the `package.json` file and see the versions of the `react-scripts`, the corresponding `react` and `react-dom` packages, and any other new upgrades (like the `@testing-library` packages for testing).
->
-> Then, just make our project's dependencies match the one in the starter project's `package.json`.
+> - Enable [Developer Mode](https://docs.microsoft.com/en-us/windows/uwp/get-started/enable-your-device-for-development#accessing-settings-for-developers) (recommended)
+>   > - Run Volta with elevated privileges (not recommended)
 
-#### Double check the new React versions in the node_modules folder
+**Check Volta installation succeeded**
 
-Before we try to restart the app, it's worth doing a quick spot-check that the updated versions of React and the other new dependencies we added took effect.
-
-**Step three:** Confirm the updated dependencies by opening up the freshly installed `node_modules` folder and checking a couple of key libraries that should have been updated.
-
-**Check React Scripts are v5**
-
-The first dependency I want to ensure has been successfully upgraded are the `react-scripts`. If you open the `node_modules` inside the `client/` folder, scroll down forever to the `react-scripts` and check the `package.json` file.
-
-If everything went as expected, you'll see the the version of this package is 5.0.1, like the image below.
-
-![screenshot of updated react-scripts version in the package.json dependencies](./public/assets/react-scripts.png)
-
-Things are off to a good start. Let's check a few more packages.
-
-**Check React is up to v18**
-
-Next, let's find the `react` package in `node_modules` to see if it's running the latest React version. Here's what you should see to confirm the new version.
-
-![screenshot of updated react version in the package.json dependencies](./public/assets/react-version.png)
-
-If you look closely at the image, you'll notice the React version here in the `react` library itself is `"version": "18.0.0"`. Nice! That looks to be in order, too.
-
-**Check Jest testing library is v27**
-
-Finally, one last key dependency we can confirm is to make sure the newest version of Jest (part of our unit testing framework), v27, is present. Scroll back up in the `node_modules` folder to the `jest` package. Open up the `package.json` accompanying this library, and you should be able to confirm the version is 27.
-
-![screenshot of updated jest version in the package.json dependencies](./public/assets/react-version.png)
-
-Great, after randomly checking that some of the dependencies are using the newest versions, I think we can safely assume the rest of the dependencies updated as well.
-
-> Don't worry; we'll also do a quick confirmation that hooks are viable once the app's running to ensure that our upgrades took full effect.
-
-#### Cross your fingers and start the app back up
-
-It's time for the moment of truth. Time to start this app back up and keep your fingers crossed it still runs. Ready?
-
-**Step four:** Restart the Hardware Handler app. In the terminal, `cd` into the `client/` folder if you're not already there, and run `yarn start`.
+To ensure Volta's installed afterward, open another new terminal window and type:
 
 ```shell
-cd client/ && yarn start
+volta -v
 ```
 
-And if you're lucky, your app will start back up, and you'll be greeted with the home screen again.
+You should see a result like this if everything installed correctly. If not, try quitting your terminal completely, reopening it, and running the `volta -v` command again.
 
-![hardware handler home page in browser](./public/assets/hardware-handler-home-page.png)
+![screenshot of command line's current version of Volta](./public/assets/volta-installed.png)
 
-Woo hoo!
+#### Install Node v14 with Volta
 
-#### Check hooks work with a simple test
+Once you see the Volta version locally on your machine, you're ready to set up a specific version of Volta in our project.
 
-I know we checked the `react` version in the `node_modules` folder, but before we get any further celebrating our React app still runs, let's make sure hooks really work. I've got a quick test we can do to confirm.
+Inside the same `client/` folder where we've been running all our commands, let's run the command:
 
-We're going to add a simple hook to a file to ensure that everything's working as expected.
+```shell
+volta pin node@14.0.0
+```
 
-**Open the Navbar.js file**
+Even if you don't have this particular Node.js version downloaded locally, by running this command, Volta will not only go out and fetch that version, but it will also _automatically_ add it to the `package.json` file right under the `"engines"` info we just added at the end of the file.
 
-The easiest file to make this check in (i.e., the file requiring the least amount of refactoring work) is the `<Navbar>` component inside the `client/` folder. Let's open that file up in our IDE.
-
-> If you're using VSCode as your IDE on a Mac, you can quickly open files with the following keyboard shortcut: `CMD + P` then type the name of the file you're looking for.
-
-This is what the `Navbar.js` code currently looks like. It's a simple, functional component with no state of its own, which makes it perfect to quickly confirm hooks now work in our project.
+If you check your `package.json` now, the bottom of the file should look something like this:
 
 ```jsx
-import React from "react";
-import { NavLink } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTools, faShoppingCart } from "@fortawesome/free-solid-svg-icons";
-import { FETCH_CHECKOUT_COUNT_ERROR } from "../../constants/constants";
-import "./Navbar.css";
-
-const Navbar = ({ checkoutCount }) => {
-  return (
-    <nav className="navbar">
-      <div className="navbar-home-link">
-        <NavLink exact to="/">
-          Hardware Handler
-          <FontAwesomeIcon className="navbar-icon" icon={faTools} />
-        </NavLink>
-      </div>
-      <span className="navbar-links-wrapper">
-        <NavLink exact to="/my-products">
-          My Products
-        </NavLink>
-        <NavLink exact to="/new-product-form">
-          Add New Products
-        </NavLink>
-        <NavLink className="navbar-link" exact to="/checkout">
-          Checkout
-          <FontAwesomeIcon className="navbar-icon" icon={faShoppingCart} />
-          {checkoutCount !== FETCH_CHECKOUT_COUNT_ERROR && checkoutCount > 0 ? (
-            <p className="navbar-checkout-count">: {checkoutCount}</p>
-          ) : null}
-        </NavLink>
-      </span>
-    </nav>
-  );
-};
-
-export default Navbar;
+  "main": "index.js",
+  "devDependencies": {},
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": "^14.0.0",
+    "yarn": "^1.20.0"
+  },
+  "volta": {
+    "node": "14.0.0"
+  }
+}
 ```
 
-And here is what this component looks like, unmodified, in the browser. Keep your attention focused on the **Hardware Handler** link in the left-hand corner of the navbar.
+And if you check your terminal's local version of Node with `node -v` in the command line, it should say `14.0.0`.
 
-![screenshot of Hardware Handler navbar in the browser](./public/assets/navbar-component.png)
 
-Okay, so let's do a couple of very simple modifications to this file.
 
-At the top of the component file, right above the `import {NavLink} ...`, add a new import for React's `useState` Hook.
+Something that sets up my correct Node and npm versions, and I don't have to even think about it? Sign me up!
 
-```jsx
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTools, faShoppingCart } from "@fortawesome/free-solid-svg-icons";
-import { FETCH_CHECKOUT_COUNT_ERROR } from "../../constants/constants";
-import "./Navbar.css";
-```
+#### Install Yarn v1 with Volta
 
-> Did you notice even though we're in a React component, we didn't have to import `React` in addition to importing the `useState` Hook? It's part of the upgrade to React v17 and a [new JSX transform](https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html).
+But wait, there's more! We're not just going to specify our Node version and stop there — we're also going to specify our Yarn version for this project, too.
+
+> There are some pretty significant breaking changes between Yarn v1 and Yarn v2, so clearly defining something like this to prevent issues is definitely a good move.
 >
-> Although the new JSX transform is completely optional, it does offer a few benefits:
->
-> - With the new transform, you can use JSX without importing `React`.
-> - Depending on your setup, the compiled output may slightly improve the bundle size.
-> - It will enable future improvements that reduce the number of concepts you need in order to learn React.
->
-> And personally, it always seemed a little funny to me to have to explicitly `import React from 'react';`, so if we can avoid doing that now, why not embrace it?
+> Yarn has kindly written a [migration guide](https://yarnpkg.com/getting-started/migration) if you'd like to learn more about the differences between the two versions.
 
-Right inside the component declaration, add a new state using the `useState` Hook. We'll call the state `hello`. This code will be deleted after we verify hooks work, so don't be too concerned with the name of this hook.
+Pinning a particular version of Yarn to a project is just as easy as adding Node with Volta.
 
-```jsx
-const Navbar = ({ checkoutCount }) => {
-  const [hello, setHello] = useState("Hello");
+Once more, in the command line inside of your `client/` folder, type the following command.
+
+```shell
+volta pin yarn
 ```
 
-Finally, we'll take this newly declared local state variable and pop it into our JSX inside the `return` statement.
+Afterward, if you check the `package.json`, you should see that Yarn's been added as a dependency to the `"volta"` section.
 
 ```jsx
-  return (
-    <nav className="navbar">
-      <div className="navbar-home-link">
-        <NavLink exact to="/">
-          {hello}
-          Hardware Handler
-          <FontAwesomeIcon className="navbar-icon" icon={faTools} />
-        </NavLink>
+  "engines": {
+    "node": "^14.0.0",
+    "yarn": "^1.20.0"
+  },
+  "volta": {
+    "node": "14.0.0",
+    "yarn": "1.22.18"
+  }
+}
 ```
 
-Now, when you run the app (if it isn't running already), you should see the Hardware Handler's text updated to: `HelloHardware Handler`.
+Here's a screenshot of the command line when I pinned the Yarn version to the project, and it immediately switched my project's Yarn version to match the one defined by Volta. For reference, my global Yarn version previously was 1.20.0.
 
-![screenshot of HelloHardware Handler navbar in the browser with a working React Hook](./public/assets/hello-navbar-component.png)
 
-It works! Hooks work! We've confirmed it for sure.
 
-Feel free to revert the changes we made to this component now — this won't carry forward when we refactor the rest of our app.
+And that's just the tip of the iceberg of Volta's capabilities. If you're interested to see what else it can do, I'd encourage you to check out the rest of [Volta's documentation](https://docs.volta.sh/guide/). It's thorough.
 
-#### Fix the console errors
+We've really done some good in this lesson. Not only have we defined recommended Node and Yarn versions for any developer who joins the project now, but we've also made it _harder_ to start doing local development on the wrong versions of Node and Yarn, thanks to Volta.
 
-Fixing warning for React 18.
-
-Go to index.js inside src folder of client directory. Replace code in index.js with the code below.
-
-```jsx
-import React from "react";
-import { createRoot } from "react-dom/client";
-import "./index.css";
-import App from "./containers/App/App";
-
-createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-```
+This sort of low-level project configuration, although it only took a few extra minutes and lines of code now, is going to make a world of difference to a development team in the future. If we can prevent even one failed deployment due to something as mundane as incompatible Node versions in development versus production, it will be worth it.
 
 ---
