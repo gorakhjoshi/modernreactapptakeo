@@ -1,15 +1,18 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTools, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
-import { FETCH_CHECKOUT_COUNT_ERROR } from '../../constants/constants';
-import './Navbar.css';
+import { useState } from "react";
+import { NavLink } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTools, faShoppingCart } from "@fortawesome/free-solid-svg-icons";
+import { FETCH_CHECKOUT_COUNT_ERROR } from "../../constants/constants";
+import "./Navbar.css";
 
 const Navbar = ({ checkoutCount }) => {
+  const [hello, setHello] = useState("Hello");
+
   return (
     <nav className="navbar">
       <div className="navbar-home-link">
         <NavLink exact to="/">
+          {hello}
           Hardware Handler
           <FontAwesomeIcon className="navbar-icon" icon={faTools} />
         </NavLink>
