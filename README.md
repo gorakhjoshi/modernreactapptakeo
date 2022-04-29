@@ -1,9 +1,6 @@
 ---
 title: 'Set Up Prettier'
-role: 'LESSON'
 description: "Code formatting, especially when it's set up, so you don't even have to think about it, is the best."
-privateVideoUrl: https://fullstack.wistia.com/medias/0ccyfzvuah
-isPublicLesson: false
 ---
 
 # Why format your code?
