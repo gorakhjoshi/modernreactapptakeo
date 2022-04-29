@@ -1,173 +1,200 @@
 ---
-title: "Lock Down the Node and Yarn Versions"
-description: "Avoid one of the most common developer woes: different devs coding with different environment versions with the help of Volta and Node Engines."
+title: 'Set Up Prettier'
+role: 'LESSON'
+description: "Code formatting, especially when it's set up, so you don't even have to think about it, is the best."
+privateVideoUrl: https://fullstack.wistia.com/medias/0ccyfzvuah
+isPublicLesson: false
 ---
 
-# Lock down the Node.js and Yarn versions
+# Why format your code?
 
-Our last lesson had us upgrading the React app from React v16.4.1 to React v18.0.0 and resolving any errors that arose as a result of the upgrade.
+I never realized until after I added Prettier just how much more pleasant development can be when the code is formatted for you.
 
-And that's all well and good, but there's more we could do, in fact, more we _should do_ to ensure that when any other developers join our team and develop a new feature, it doesn't break the app right after deployment because they were developing locally on a different version of Node.js than the app is running in the production environment.
+Prior to Prettier, I (and most of the developers I work with) had been writing JavaScript and formatting each file as we saw fit.
 
-So, let's take a couple of steps to prevent such catastrophes from happening. No developer should have to live through that if a little extra upfront work can prevent it.
+While this didn't negatively impact our app or our users, it did cause a lot of inconsistency in our code.
 
-**In this lesson, we'll learn how to explicitly define our project's environment configurations so that it's harder for devs to do the wrong thing than it is to do the right one.**
+Some developers would declare variables in one long, unbroken line, while others declared each new variable on a new line. Some files would have functions with almost no spaces or new lines, and others would have lots of extra lines in between lines of code. Or, the greatest and most divisive debate of all, the one over which wars have been waged and relationships ruined: some devs would use tabs whereas others would use spaces.
 
-### Define the Node engines in the package.json
+It was chaos. But then, a better way emerged: [Prettier](https://prettier.io/). A code style guide to end the stylistic debates and free up developers to think about more important things than code formatting.
 
-If you're not familiar with [Node engines](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#engines), it's a rarely discussed but very useful code snippet you can include in a project's `package.json` file to let anyone downloading the code know exactly which versions of Node.js, npm, and Yarn are required for the app to run.
+And it got even easier with the VSCode Prettier extension. So easy, I almost don't have to think about it at all; that is the moment when I truly fell in love with code formatting, personally.
 
-As the npm docs themselves put it: "[ with engines ] you can specify the version of node that your stuff works on". That's it. Plain and simple.
+**This lesson will take us on a quick tour of what Prettier is and how it works, then we'll set it up so that it will format on save or even when you change focus from one file to another in the project.**
 
-> When `"engines"` aren't included (or you use a wildcard `"*"`) in a `package.json`, node assumes any version of it will work.
+### What is Prettier?
 
-So with that in mind, let's define our Node and Yarn versions for our app.
+[Prettier](https://prettier.io/docs/en/index.html) is an opinionated code formatter with support for 12+ programming languages and growing, including JavaScript and JSX. It works by removing all of the original styling from a project file and ensuring all the newly outputted code conforms to a consistent style.
 
-Open up our `client/` folder's `package.json` file, and at the very end, right after `"license" : "ISC"`, add the following lines:
+Here are a few reasons code formatting with Prettier benefits the whole team.
+
+- It dramatically reduces the amount of time spent nit-picking over personal code style preferences.
+- It helps newcomers to the JavaScript language or project get up to speed quicker and debug issues caused by syntax errors faster.
+- It makes writing code easier — now there's no need to spend mental energy formatting code.
+- It's easy to adopt — the Prettier team worked hard to use the least controversial coding styles and went through many rounds of fixing all the edge cases to make getting started polished and painless.
+- It can clean up an existing codebase without being a massive undertaking.
+
+And, luckily, Prettier is simple to add to a JavaScript project and almost as easy to set up with the VSCode extension so that it formats with next to no effort on our part. Let's get to it.
+
+### Set up Prettier in the Hardware Handler app
+
+Now that we've gotten an idea of what Prettier is and why it can benefit everyone on the team, from the newest developers to the experienced seniors, let's set it up in our application.
+
+Although Prettier can be run from the [command line](https://prettier.io/docs/en/cli.html), through [global installation](https://prettier.io/docs/en/install.html), or via the [Prettier API](https://prettier.io/docs/en/api.html), we'll set it up so that any developer can rest assured knowing their Prettier is consistent with the project.
+
+We're going to download it to the project as a dependency, so everyone using it has the same version in addition to having the same config files for it.
+
+The first thing you'll want to do is open up the app in your IDE of choice and, in a new terminal window, `cd` into the `client/` folder. From there, type the following command to save the `"prettier"` dependency to your `package.json`.
+
+```shell
+yarn add prettier
+```
+
+Now when you check your `package.json`, you should see `"prettier"` in between the `"concurrently"` and `"react"` dependencies.
+
+**package.json**
 
 ```jsx
-  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
-  "main": "index.js",
-  "devDependencies": {},
-  "author": "",
-  "license": "ISC",
-  "engines": {
-    "node": "^14.0.0",
-    "yarn": "^1.20.0"
-  }
+    "concurrently": "^6.0.0",
+    "prettier": "^2.6.2",
+    "react": "18.0.0",
+```
+
+With Prettier installed locally, we can move on to creating the file giving Prettier our preferred code formatting rules to follow.
+
+#### Create a .prettierrc file
+
+At the root of the project, create a new file called `.prettierrc`.
+
+![screenshot of project tree showing new .prettierrc file at its root](./public/assets/prettier-at-root-of-project.png)
+
+This file can be written in either [JSON](https://www.w3schools.com/js/js_json_syntax.asp) or [YAML syntax](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html).
+
+> **[You can configure Prettier](https://prettier.io/docs/en/configuration.html) in so many ways.**
+>
+> Prettier is flexible and smart enough that either type of file, even with no file ending like `.json` or `.yaml`, will be correctly interpreted and used within the project.
+
+I prefer JSON syntax (YAML indentation is a little finicky for my tastes), so that's what I'm going to use to define my code formatting rules.
+
+Prettier ships with a [handful of options](https://prettier.io/docs/en/options.html), which I strongly encourage you to explore to see if any really speak to you, but I keep my `.prettierrc` file simple, and I'm still very pleased with the results it gives me.
+
+Here's the Prettier config I end up including in almost every project I work on. Please copy this code, add it to the new `.prettierrc` file, and we'll go through each one of these configuration options.
+
+**.prettierrc**
+
+```json
+{
+  "endOfLine": "lf",
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 80
 }
 ```
 
-Now, when a developer attempts to install the dependencies and run this app on a Node.js version other than the defined one, an error will be thrown in the console.
+#### endOfLine: lf
 
-Here's an example screenshot where I set the `"engines"` Node version to `"14.0.0"`, but my local development environment is running Node.js version v17.9.0.
+When people collaborate on a project using different operating systems, there's a good chance the line endings will be a mixture of `\n` (`LF` for Line Feed from macOS and Linux systems) and `\r\n` (`CRLF` for Carriage Return + Line Feed from Windows systems). These differences produce a large `git diff` and thus make the line-by-line history for a file (`git blame`) harder to explore.
 
-![warning in the command line when a different version of Node is used versus what's defined by the package.json's engines](./public/assets/node-engines-warning.png)
+Including [`"endOfLine": "lf"`](https://prettier.io/docs/en/options.html#end-of-line) in our `.prettierrc` file ensures that our entire `git` repository will only contain Linux-style line endings in files covered by Prettier.
 
-See the warning in this error message screenshot? `The engine "node" is incompatible with this module. Expected version "^14.0.0". Got "17.9.0"` That _should_ deter most developers from attempting to go much further with an incompatible Node version.
+#### semi: true
 
-There is one catch, though. Including `"engines"` alone in the `package.json` doesn't guarantee a developer _must_ use the specified versions as defined.
+This configuration prints semicolons at the end of every statement. Although semicolons aren't _technically_ required by the JavaScript language the way some programming languages (like Java) rely on them, I like them.
 
-And if you're a dev lacking the recommended version of Node or npm or what-have-you but you're excited to start developing that shiny new feature, you might be tempted to ignore the warnings provided by `"engines"` in the command line and forge ahead.
+Semicolons improve code readability, in my opinion, and I think it helps prevent potential unexpected bugs, so I like to keep [`"semi": true`](https://prettier.io/docs/en/options.html#semicolons) in my `.prettierrc` file, just to be safe.
 
-For that reason, we're going to make it even easier for any dev to do the right thing, so easy, in fact, you'll wonder how you ever developed without this little addition to your tooling setup: Volta.
+#### singleQuote: true
 
-### Volta: Taking the hassle out of JavaScript command-line tools
+Everywhere in the code (omitting JSX) where double quotes are used, this Prettier option will automatically change them to single quotes.
 
-[Volta](https://volta.sh/) is an awesome tool designed to make managing our JavaScript command-line tools, such as `node`, `npm`, `yarn`, or executables shipped as part of JavaScript packages, really easy.
+That one is pretty self-explanatory. [`"singleQuote": true`](https://prettier.io/docs/en/options.html#quotes) helps keep strings consistent in the project.
 
-Similar to package managers, Volta keeps track of which project (if any) you’re working on based on your current directory. The tools in your Volta toolchain automatically detect when you’re in a project that’s using a particular version of the tools and takes care of routing to the right version of the tools for you.
+#### tabWidth: 2
 
-It's very cool in practice. Up to now, I'd been using [NVM](https://github.com/nvm-sh/nvm) to manage and switch between different versions of Node.js depending on which project I'm working in, but it was more complicated to set up initially _and_, more importantly, Volta takes the thinking part out of the equation. When it's set up in a project and installed on a local machine, I don't even have to think about switching versions; Volta just does it for me.
+Another fairly self-explanatory config option, [`"tabWidth": 2`](https://prettier.io/docs/en/options.html#tab-width) specifies how many spaces per indentation level.
 
-#### Download Volta locally
+I like my code to be a little more compact, especially when it starts to get fairly deeply nested, but if you like it a little more spread out, feel free to bump this up to `"tabWidth": 4` or more.
 
-So to get started, let's download Volta locally.
+#### trailingComma: es5
 
-**Volta installation on MacOS/Linux systems**
+There are three options for the [`"trailingComma"`](https://prettier.io/docs/en/options.html#trailing-commas) option: `"es5"`, `"all"`, or `"none"`.
 
-Open up a new terminal window and run the following command:
+The default now is `"es5"`, which adds trailing commas where valid in ES5 (objects, arrays, etc.). The `"all"` option adds trailing commas wherever possible (including trailing commas in function parameter lists and calls) and requires Babel transpilation or a modern browser that supports ES2017. And `"none"` doesn't add any commas ever.
 
-```shell
-curl https://get.volta.sh | bash
+#### printWidth: 80
+
+The `"printWidth"` configuration option specifies the line length the printer will wrap on.
+
+For readability, the Prettier team themselves recommend [`"printWidth": 80`](https://prettier.io/docs/en/options.html#print-width), and I'm happy to acquiesce to their specification.
+
+T> Like I said earlier, there's a number of [Prettier configuration options](https://prettier.io/docs/en/options.html). Have a look through them, and add any that you think will make your development experience more enjoyable.
+
+### Download the Prettier VSCode extension
+
+Right, now we've got a `.prettierrc` file in our application, and this is definitely a good start, but if you're using VSCode as your code editor of choice, we can take it one step further and make code formatting even easier.
+
+To really get the most out of Prettier, it's recommended to run it from your code editor.
+
+> If your editor of choice doesn't support it, you can run a [file watcher](https://prettier.io/docs/en/watching-files.html) to watch for files changed and format them with Prettier.
+
+If you're using VSCode as your IDE, however, there's an extension in the VSCode Extension Marketplace called [Prettier - Code Formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode).
+
+Find this extension by searching "prettier" after you open the Extensions (the Tetris block-looking icon in the far left of the VSCode editor). The extension you want will be the first one to pop up, and I've included a screenshot below so you can make sure you've got it right (there are a lot of competitors nowadays).
+
+![the Prettier extension in the VSCode Extension Marketplace](./public/assets/prettier-vscode-plugin.png)
+
+Install this extension, and then we'll finish up our configuration in the VSCode local settings.
+
+### Configure VSCode to auto-format with Prettier on save or change of focus
+
+This is the last step to get Prettier formatting our files on save or change of focus within VSCode.
+
+Open up the VSCode settings by using the keyboard shortcut `CMD + SHIFT + P` (on a Mac) or `CTRL + SHIFT + P` (on Windows) to open up the VSCode command palette, then type "settings" into the search bar, and select the `"Preferences: Open Settings (JSON)"` option when you see the results.
+
+![JSON settings options in VSCode from the command palette](./public/assets/json-settings.png)
+
+Inside of this file are all our personal workspace settings that take effect in VSCode. In here, add the following lines:
+
+**settings.json**
+
+```json
+"editor.formatOnSave": true,
+"editor.defaultFormatter": "esbenp.prettier-vscode",
 ```
 
-**Volta installation on Windows systems**
+The `"editor.formatOnSave": true` is what's going to trigger Prettier every time you save a file or change file focus by clicking out of the program. When you do so, Prettier will auto-format the code you were working on.
 
-Download and run the [Windows installer](https://github.com/volta-cli/volta/releases/download/v1.0.4/volta-1.0.4-windows-x86_64.msi) and follow the instructions.
+To test this is working, open up the `App.js` file in VSCode, scroll down to line 24 where the `componentDidMount` function is called and save the file. If it's working, you should see the state setter go from a single line to broken across multiple lines.
 
-> **Note for Windows users**
+**App.js before Prettier**
+
+![App.js code before Prettier code formatting is enabled](./public/assets/code-before-prettier.png)
+
+Notice how the state is all on a single line in the screenshot above.
+
+**App.js after Prettier**
+
+![App.js code after Prettier formatting is added to the project](./public/assets/code-after-prettier.png)
+
+Once Prettier is added to the project, the code formatting rules take over, and what was once a single line is broken up into multiple lines. That's Prettier at work.
+
+> If Prettier doesn't immediately work, try quitting VSCode and restarting it. The plugin may need a reload to take full effect.
+
+> **Prettier can also be more fine-grained in its code formatting**
 >
-> Volta's functionality depends on creating symlinks, so you must either:
+> If you'd like Prettier to only format certain file types or only auto-format in certain scenarios, you can also specify this in your `settings.json` file like so.
 >
-> - Enable [Developer Mode](https://docs.microsoft.com/en-us/windows/uwp/get-started/enable-your-device-for-development#accessing-settings-for-developers) (recommended)
->   > - Run Volta with elevated privileges (not recommended)
-
-**Check Volta installation succeeded**
-
-To ensure Volta's installed afterward, open another new terminal window and type:
-
-```shell
-volta -v
-```
-
-You should see a result like this if everything installed correctly. If not, try quitting your terminal completely, reopening it, and running the `volta -v` command again.
-
-![screenshot of command line's current version of Volta](./public/assets/volta-installed.png)
-
-#### Install Node v14 with Volta
-
-Once you see the Volta version locally on your machine, you're ready to set up a specific version of Volta in our project.
-
-Inside the same `client/` folder where we've been running all our commands, let's run the command:
-
-```shell
-volta pin node@14.0.0
-```
-
-Even if you don't have this particular Node.js version downloaded locally, by running this command, Volta will not only go out and fetch that version, but it will also _automatically_ add it to the `package.json` file right under the `"engines"` info we just added at the end of the file.
-
-If you check your `package.json` now, the bottom of the file should look something like this:
-
-```jsx
-  "main": "index.js",
-  "devDependencies": {},
-  "author": "",
-  "license": "ISC",
-  "engines": {
-    "node": "^14.0.0",
-    "yarn": "^1.20.0"
-  },
-  "volta": {
-    "node": "14.0.0"
-  }
-}
-```
-
-And if you check your terminal's local version of Node with `node -v` in the command line, it should say `14.0.0`.
-
-
-
-Something that sets up my correct Node and npm versions, and I don't have to even think about it? Sign me up!
-
-#### Install Yarn v1 with Volta
-
-But wait, there's more! We're not just going to specify our Node version and stop there — we're also going to specify our Yarn version for this project, too.
-
-> There are some pretty significant breaking changes between Yarn v1 and Yarn v2, so clearly defining something like this to prevent issues is definitely a good move.
+> ```json
+> "[javascript]": {
+>   "editor.formatOnSave": true,
+>   "editor.defaultFormatter": "esbenp.prettier-vscode"
+> },
+> ```
 >
-> Yarn has kindly written a [migration guide](https://yarnpkg.com/getting-started/migration) if you'd like to learn more about the differences between the two versions.
+> Just specify the language you want to be formatted by Prettier, and choose the settings you want instead of setting it globally for the project.
 
-Pinning a particular version of Yarn to a project is just as easy as adding Node with Volta.
-
-Once more, in the command line inside of your `client/` folder, type the following command.
-
-```shell
-volta pin yarn
-```
-
-Afterward, if you check the `package.json`, you should see that Yarn's been added as a dependency to the `"volta"` section.
-
-```jsx
-  "engines": {
-    "node": "^14.0.0",
-    "yarn": "^1.20.0"
-  },
-  "volta": {
-    "node": "14.0.0",
-    "yarn": "1.22.18"
-  }
-}
-```
-
-Here's a screenshot of the command line when I pinned the Yarn version to the project, and it immediately switched my project's Yarn version to match the one defined by Volta. For reference, my global Yarn version previously was 1.20.0.
-
-
-
-And that's just the tip of the iceberg of Volta's capabilities. If you're interested to see what else it can do, I'd encourage you to check out the rest of [Volta's documentation](https://docs.volta.sh/guide/). It's thorough.
-
-We've really done some good in this lesson. Not only have we defined recommended Node and Yarn versions for any developer who joins the project now, but we've also made it _harder_ to start doing local development on the wrong versions of Node and Yarn, thanks to Volta.
-
-This sort of low-level project configuration, although it only took a few extra minutes and lines of code now, is going to make a world of difference to a development team in the future. If we can prevent even one failed deployment due to something as mundane as incompatible Node versions in development versus production, it will be worth it.
+Excellent. Prettier is now set up in our project, enforcing code formatting standards automatically, so we don't have to. In the next lesson, we'll move on to ESLint and set up those rules to keep our code quality high throughout the project.
 
 ---
