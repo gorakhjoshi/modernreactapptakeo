@@ -21,7 +21,7 @@ class App extends Component {
     };
   }
 
-  componentDidMount = async () => {
+  async componentDidMount() {
     const checkoutCount = await checkoutApi.getCheckoutCount();
     if (Number(checkoutCount) || checkoutCount === 0) {
       this.setState({ checkoutCount, loading: false, error: false });

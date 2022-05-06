@@ -2,7 +2,7 @@ import React from 'react';
 import { formatPrice } from '../../helpers/formatPrice';
 import './Product.css';
 
-const Product = ({ product, addItemToCheckout }) => {
+function Product({ product, addItemToCheckout }) {
   return (
     <div key={product.id} className="product">
       <div>
@@ -23,6 +23,6 @@ const Product = ({ product, addItemToCheckout }) => {
       </div>
     </div>
   );
-};
+}
 
 export default Product;

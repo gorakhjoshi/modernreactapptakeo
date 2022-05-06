@@ -42,7 +42,7 @@ export const addItemToCheckout = async (item) => {
       const errMsg = PRODUCT_ALREADY_IN_CHECKOUT_ERROR;
       return errMsg;
       // if it doesn't update the cart with a new product
-    } else {
+    } 
       const { id, ...newCartItem } = item;
       try {
         await axios.post(`/checkout/`, {
@@ -56,7 +56,7 @@ export const addItemToCheckout = async (item) => {
         const errMsg = PRODUCT_ADDED_TO_CHECKOUT_ERROR;
         return errMsg;
       }
-    }
+    
   } catch (err) {
     console.error(err);
     const errMsg = ADD_PRODUCT_TO_CHECKOUT_ERROR;

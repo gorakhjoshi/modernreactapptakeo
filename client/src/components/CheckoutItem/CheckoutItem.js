@@ -2,7 +2,7 @@ import React from 'react';
 import { formatPrice } from '../../helpers/formatPrice';
 import './CheckoutItem.css';
 
-const CheckoutItem = ({ item, removeItemFromCheckout }) => {
+function CheckoutItem({ item, removeItemFromCheckout }) {
   const { name, brand, description, retailPrice } = item;
 
   return (
@@ -30,6 +30,6 @@ const CheckoutItem = ({ item, removeItemFromCheckout }) => {
       </div>
     </li>
   );
-};
+}
 
 export default CheckoutItem;

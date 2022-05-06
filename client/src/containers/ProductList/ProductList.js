@@ -124,12 +124,10 @@ class ProductList extends Component {
     ) {
       filteredList = this.state.products;
     } else {
-      filteredList = this.state.products.filter((item) => {
-        return (
+      filteredList = this.state.products.filter((item) => (
           this.state.activeFilter.includes(item.brand) ||
           this.state.activeFilter.includes(item.departmentId)
-        );
-      });
+        ));
     }
 
     return (
